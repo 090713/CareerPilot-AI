@@ -1,127 +1,145 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-# Import database dependency
-from database import get_db
-
-# Import request schema
-from schemas import StudentCreate
-
-# Import CRUD functions
 import crud
+import schemas
+from database import get_db
+from dependencies import get_current_user
 
-
-# Create a router for all student-related APIs
+# ==========================================
+# Create Router
+# All student-related APIs start with /students
+# ==========================================
 router = APIRouter(
-    prefix="/students",      # All routes start with /students
-    tags=["Students"]        # Group these endpoints in Swagger UI
+    prefix="/students",
+    tags=["Students"]
 )
 
 
-# ==========================
-# CREATE STUDENT
-# ==========================
-@router.post("/")
+# ==========================================
+# CREATE Student
+# ==========================================
+@router.post(
+    "/",
+    response_model=schemas.StudentResponse
+)
 def register_student(
-    student: StudentCreate,
+    student: schemas.StudentCreate,
     db: Session = Depends(get_db)
 ):
     """
-    Register a new student in the database.
+    Register a new student.
+
+    The password is automatically hashed
+    before storing it in the database.
     """
 
-    new_student = crud.create_student(
-        db,
-        student.name,
-        student.email
-    )
-
-    return {
-        "message": "Student Registered Successfully!",
-        "student": new_student
-    }
+    return crud.create_student(db, student)
 
 
-# ==========================
-# GET ALL STUDENTS
-# ==========================
-@router.get("/")
+# ==========================================
+# GET All Students
+# ==========================================
+@router.get(
+    "/",
+    response_model=list[schemas.StudentResponse]
+)
 def get_students(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
     """
-    Fetch all students from the database.
+    Retrieve all students.
+    Only authenticated users can access this endpoint.
     """
 
     return crud.get_students(db)
 
 
-# ==========================
-# GET STUDENT BY ID
-# ==========================
-@router.get("/{student_id}")
+# ==========================================
+# GET Student by ID
+# ==========================================
+@router.get(
+    "/{student_id}",
+    response_model=schemas.StudentResponse
+)
 def get_student(
     student_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
     """
-    Fetch one student using their ID.
+    Retrieve one student by ID.
     """
 
     student = crud.get_student(db, student_id)
 
-    if not student:
-        return {"message": "Student not found"}
+    if student is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
 
     return student
 
 
-# ==========================
-# UPDATE STUDENT
-# ==========================
-@router.put("/{student_id}")
+# ==========================================
+# UPDATE Student
+# ==========================================
+@router.put(
+    "/{student_id}",
+    response_model=schemas.StudentResponse
+)
 def update_student(
     student_id: int,
-    student: StudentCreate,
-    db: Session = Depends(get_db)
+    student: schemas.StudentCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
     """
-    Update a student's information.
+    Update student information.
     """
 
-    updated = crud.update_student(
+    updated_student = crud.update_student(
         db,
         student_id,
         student.name,
         student.email
     )
 
-    if not updated:
-        return {"message": "Student not found"}
+    if updated_student is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
 
-    return {
-        "message": "Student Updated Successfully!",
-        "student": updated
-    }
+    return updated_student
 
 
-# ==========================
-# DELETE STUDENT
-# ==========================
+# ==========================================
+# DELETE Student
+# ==========================================
 @router.delete("/{student_id}")
 def delete_student(
     student_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
     """
-    Delete a student from the database.
+    Delete a student.
     """
 
-    deleted = crud.delete_student(db, student_id)
+    deleted_student = crud.delete_student(
+        db,
+        student_id
+    )
 
-    if not deleted:
-        return {"message": "Student not found"}
+    if deleted_student is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
 
     return {
-        "message": "Student Deleted Successfully!"
+        "message": "Student deleted successfully."
     }
