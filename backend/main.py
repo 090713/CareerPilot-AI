@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from database import engine
 from models import Base
 from routers import students, auth
+from routers import resume
 
 # Create FastAPI application
 app = FastAPI(
@@ -15,6 +16,7 @@ Base.metadata.create_all(bind=engine)
 # Include Student Router
 app.include_router(students.router)
 app.include_router(auth.router)
+app.include_router(resume.router)
 
 # Home Endpoint
 @app.get("/")

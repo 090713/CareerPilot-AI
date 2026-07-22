@@ -110,3 +110,26 @@ def delete_student(db: Session, student_id: int):
 
     # Return deleted student (or None if not found)
     return student
+
+def update_student_resume(
+    db: Session,
+    student_id: int,
+    filename: str,
+    resume_text: str
+):
+    """
+    Update the student's resume information.
+    """
+
+    student = db.query(models.Student).filter(
+        models.Student.id == student_id
+    ).first()
+
+    if student:
+        student.resume_filename = filename
+        student.resume_text = resume_text
+
+        db.commit()
+        db.refresh(student)
+
+    return student
