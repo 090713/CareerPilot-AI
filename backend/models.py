@@ -6,25 +6,33 @@ from database import Base
 class Student(Base):
     __tablename__ = "students"
 
-    # Primary Key (Auto Increment ID)
     id = Column(Integer, primary_key=True, index=True)
 
-    # Student Name
-    name = Column(String, nullable=False)
+    name = Column(
+        String,
+        nullable=False
+    )
 
-    # Student Email (Must be unique)
-    email = Column(String, unique=True, nullable=False)
+    email = Column(
+        String,
+        unique=True,
+        nullable=False
+    )
 
-    # Stores the HASHED password (Never store plain passwords)
-    password = Column(String, nullable=False)
+    password = Column(
+        String,
+        nullable=False
+    )
 
-    resume_filename = Column(String, nullable=True)
-    resume_text = Column(Text, nullable=True)
 
 class Resume(Base):
     __tablename__ = "resumes"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
     student_id = Column(
         Integer,
@@ -58,8 +66,44 @@ class Resume(Base):
     )
 
     is_current = Column(
-    Integer,
-    default=1
+        Integer,
+        default=1
+    )
+
+    uploaded_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now()
+    )
+
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    student_id = Column(
+        Integer,
+        ForeignKey("students.id"),
+        nullable=False
+    )
+
+    job_title = Column(
+        String,
+        nullable=False
+    )
+
+    company = Column(
+        String,
+        nullable=True
+    )
+
+    description = Column(
+        Text,
+        nullable=False
     )
 
     uploaded_at = Column(

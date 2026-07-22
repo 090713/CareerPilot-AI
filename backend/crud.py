@@ -6,14 +6,10 @@ from security import hash_password
 
 
 # ==========================================
-# CREATE a new student
+# STUDENT CRUD
 # ==========================================
-def create_student(db: Session, student: schemas.StudentCreate):
-    # Debugging
-    print("Password:", student.password)
-    print("Type:", type(student.password))
-    print("Length:", len(student.password))
 
+def create_student(db: Session, student: schemas.StudentCreate):
     hashed_password = hash_password(student.password)
 
     db_student = models.Student(
@@ -28,108 +24,209 @@ def create_student(db: Session, student: schemas.StudentCreate):
 
     return db_student
 
+
 def get_student_by_email(
     db: Session,
     email: str
 ):
-    """
-    Find a student using their email address.
-    """
-
-    return db.query(
-        models.Student
-    ).filter(
-        models.Student.email == email
-    ).first()
+    return (
+        db.query(models.Student)
+        .filter(models.Student.email == email)
+        .first()
+    )
 
 
-# ==========================================
-# READ all students
-# ==========================================
 def get_students(db: Session):
-    """
-    Fetch all students from the database.
-    """
     return db.query(models.Student).all()
 
 
-# ==========================================
-# READ one student by ID
-# ==========================================
-def get_student(db: Session, student_id: int):
-    """
-    Fetch a single student using their ID.
-    Returns None if the student does not exist.
-    """
-    return db.query(models.Student).filter(
-        models.Student.id == student_id
-    ).first()
+def get_student(
+    db: Session,
+    student_id: int
+):
+    return (
+        db.query(models.Student)
+        .filter(models.Student.id == student_id)
+        .first()
+    )
 
 
-# ==========================================
-# UPDATE student details
-# ==========================================
-def update_student(db: Session, student_id: int, name: str, email: str):
-    """
-    Update a student's name and email.
-    """
-
-    # Find the student first
+def update_student(
+    db: Session,
+    student_id: int,
+    name: str,
+    email: str
+):
     student = get_student(db, student_id)
 
-    # If student exists, update the details
     if student:
         student.name = name
         student.email = email
 
-        # Save changes
         db.commit()
-
-        # Refresh object with latest database values
         db.refresh(student)
 
-    # Return updated student (or None if not found)
     return student
 
 
-# ==========================================
-# DELETE a student
-# ==========================================
-def delete_student(db: Session, student_id: int):
-    """
-    Delete a student using their ID.
-    """
-
-    # Find the student first
+def delete_student(
+    db: Session,
+    student_id: int
+):
     student = get_student(db, student_id)
 
-    # Delete only if the student exists
     if student:
         db.delete(student)
         db.commit()
 
-    # Return deleted student (or None if not found)
     return student
 
-def update_student_resume(
+
+# ==========================================
+# RESUME CRUD
+# ==========================================
+
+def get_latest_resume(
+    db: Session,
+    student_id: int
+):
+    return (
+        db.query(models.Resume)
+        .filter(
+            models.Resume.student_id == student_id,
+            models.Resume.is_current == 1
+        )
+        .first()
+    )
+
+
+def get_next_resume_version(
+    db: Session,
+    student_id: int
+):
+    latest = (
+        db.query(models.Resume)
+        .filter(
+            models.Resume.student_id == student_id
+        )
+        .order_by(models.Resume.version.desc())
+        .first()
+    )
+
+    if latest:
+        return latest.version + 1
+
+    return 1
+
+
+def deactivate_current_resume(
+    db: Session,
+    student_id: int
+):
+    current = get_latest_resume(
+        db,
+        student_id
+    )
+
+    if current:
+        current.is_current = 0
+        db.commit()
+
+
+def create_resume(
     db: Session,
     student_id: int,
     filename: str,
     resume_text: str
 ):
-    """
-    Update the student's resume information.
-    """
+    version = get_next_resume_version(
+        db,
+        student_id
+    )
 
-    student = db.query(models.Student).filter(
-        models.Student.id == student_id
-    ).first()
+    deactivate_current_resume(
+        db,
+        student_id
+    )
 
-    if student:
-        student.resume_filename = filename
-        student.resume_text = resume_text
+    resume = models.Resume(
+        student_id=student_id,
+        version=version,
+        filename=filename,
+        resume_text=resume_text,
+        is_current=1
+    )
 
-        db.commit()
-        db.refresh(student)
+    db.add(resume)
+    db.commit()
+    db.refresh(resume)
 
-    return student
+    return resume
+
+
+def get_resume_history(
+    db: Session,
+    student_id: int
+):
+    return (
+        db.query(models.Resume)
+        .filter(
+            models.Resume.student_id == student_id
+        )
+        .order_by(models.Resume.version.desc())
+        .all()
+    )
+
+
+def get_resume_by_version(
+    db: Session,
+    student_id: int,
+    version: int
+):
+    return (
+        db.query(models.Resume)
+        .filter(
+            models.Resume.student_id == student_id,
+            models.Resume.version == version
+        )
+        .first()
+    )
+
+
+# ==========================================
+# JOB CRUD
+# ==========================================
+
+def create_job(
+    db: Session,
+    student_id: int,
+    job_title: str,
+    company: str,
+    description: str
+):
+    job = models.Job(
+        student_id=student_id,
+        job_title=job_title,
+        company=company,
+        description=description
+    )
+
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    return job
+
+
+def get_latest_job(
+    db: Session,
+    student_id: int
+):
+    return (
+        db.query(models.Job)
+        .filter(
+            models.Job.student_id == student_id
+        )
+        .order_by(models.Job.uploaded_at.desc())
+        .first()
+    )

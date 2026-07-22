@@ -1,21 +1,16 @@
 from pydantic import BaseModel
 
 
-# ==========================
-# Request Schema
-# Used when creating a student
-# ==========================
+# ==========================================
+# Student Schemas
+# ==========================================
+
 class StudentCreate(BaseModel):
     name: str
     email: str
     password: str
 
 
-# ==========================
-# Response Schema
-# Used when sending data back
-# Password is NOT returned
-# ==========================
 class StudentResponse(BaseModel):
     id: int
     name: str
@@ -24,17 +19,50 @@ class StudentResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# ==========================
-# Login Request
-# ==========================
+
+# ==========================================
+# Authentication Schemas
+# ==========================================
+
 class LoginRequest(BaseModel):
     email: str
     password: str
 
 
-# ==========================
-# Login Response
-# ==========================
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+# ==========================================
+# Job Schemas
+# ==========================================
+
+class JobCreate(BaseModel):
+    job_title: str
+    company: str
+    description: str
+
+
+# ==========================================
+# Resume Response Schema
+# ==========================================
+
+class ResumeResponse(BaseModel):
+    version: int
+    filename: str
+    resume_score: int | None = None
+    uploaded_at: str | None = None
+
+
+# ==========================================
+# Job Match Response
+# ==========================================
+
+class JobMatchResponse(BaseModel):
+    job_title: str
+    company: str | None = None
+    match_score: int
+    matching_skills: list[str]
+    missing_skills: list[str]
+    recommendations: list[str]
