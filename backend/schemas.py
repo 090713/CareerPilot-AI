@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+from datetime import datetime
 
 
 # ==========================================
@@ -66,3 +67,17 @@ class JobMatchResponse(BaseModel):
     matching_skills: list[str]
     missing_skills: list[str]
     recommendations: list[str]
+
+# =====================================================
+# Interview Schemas
+# =====================================================
+
+class InterviewResponse(BaseModel):
+    id: int
+    student_id: int
+    resume_id: int
+    job_id: int
+    questions: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

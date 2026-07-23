@@ -142,3 +142,90 @@ Return only JSON.
     )
 
     return parse_json_response(response.text)
+
+# =====================================================
+# AI Interview Question Generator
+# =====================================================
+
+def generate_interview_questions(
+    resume_text: str,
+    job_description: str
+):
+    """
+    Generate interview questions based on the
+    student's resume and job description.
+
+    Returns:
+    - Technical Questions
+    - Behavioral Questions
+    - HR Questions
+    - Coding Questions
+    """
+
+    prompt = f"""
+You are an experienced Technical Interviewer.
+
+Based on the resume and job description below,
+generate interview questions.
+
+Resume:
+
+{resume_text}
+
+Job Description:
+
+{job_description}
+
+Return ONLY valid JSON.
+
+Use exactly this format:
+
+{{
+    "technical": [
+        {{
+            "question": "",
+            "answer": "",
+            "difficulty": ""
+        }}
+    ],
+    "behavioral": [
+        {{
+            "question": "",
+            "answer": "",
+            "difficulty": ""
+        }}
+    ],
+    "hr": [
+        {{
+            "question": "",
+            "answer": "",
+            "difficulty": ""
+        }}
+    ],
+    "coding": [
+        {{
+            "question": "",
+            "answer": "",
+            "difficulty": ""
+        }}
+    ]
+}}
+
+Requirements:
+
+- Generate 5 technical questions.
+- Generate 3 behavioral questions.
+- Generate 3 HR questions.
+- Generate 2 coding questions.
+- Difficulty must be Easy, Medium, or Hard.
+- Answers should be concise and suitable for interview preparation.
+- Return only JSON.
+- Do not use markdown.
+"""
+
+    response = client.models.generate_content(
+        model="gemini-flash-latest",
+        contents=prompt
+    )
+
+    return parse_json_response(response.text)

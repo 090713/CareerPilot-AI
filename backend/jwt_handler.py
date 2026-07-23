@@ -8,7 +8,7 @@ import os
 from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
-from jose import jwt
+from jose import jwt, JWTError
 
 # =====================================================
 # Load Environment Variables
@@ -59,3 +59,24 @@ def create_access_token(data: dict) -> str:
     )
 
     return encoded_jwt
+
+def verify_token(token: str) -> dict | None:
+    """
+    Verify a JWT token and return its payload.
+
+    Returns:
+        dict: Token payload if valid.
+        None: If the token is invalid or expired.
+    """
+
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        return payload
+
+    except JWTError:
+        return None

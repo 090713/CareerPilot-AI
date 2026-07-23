@@ -7,7 +7,10 @@ from ai_service import match_resume_with_job
 from database import get_db
 from dependencies import get_current_user
 
-# Create a router for all Job-related APIs
+# ==========================================
+# Job Router
+# ==========================================
+
 router = APIRouter(
     prefix="/jobs",
     tags=["Jobs"]
@@ -15,28 +18,22 @@ router = APIRouter(
 
 
 # ==========================================
-# Upload a Job Description
+# Upload Job Description
 # ==========================================
 @router.post("/upload")
 def upload_job(
     job: schemas.JobCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Get the logged-in student
-    student = crud.get_student_by_email(
-        db,
-        current_user["sub"]
-    )
+    """
+    Upload a new job description.
+    """
 
-    # Check whether the student exists
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Student not found."
-        )
+    # Logged-in student
+    student = current_user
 
-    # Save the job description into the database
+    # Save job description
     new_job = crud.create_job(
         db=db,
         student_id=student.id,
@@ -45,7 +42,6 @@ def upload_job(
         description=job.description
     )
 
-    # Return success response
     return {
         "success": True,
         "message": "Job description uploaded successfully.",
@@ -58,26 +54,21 @@ def upload_job(
 
 
 # ==========================================
-# Match Resume with Latest Job Description
+# Match Resume with Latest Job
 # ==========================================
 @router.post("/match")
 def match_job(
-    current_user: dict = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Get the logged-in student
-    student = crud.get_student_by_email(
-        db,
-        current_user["sub"]
-    )
+    """
+    Compare the latest uploaded resume with the latest job description.
+    """
 
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Student not found."
-        )
+    # Logged-in student
+    student = current_user
 
-    # Fetch the student's latest uploaded resume
+    # Latest Resume
     resume = crud.get_latest_resume(
         db,
         student.id
@@ -89,7 +80,7 @@ def match_job(
             detail="No resume uploaded."
         )
 
-    # Fetch the latest uploaded job description
+    # Latest Job
     job = crud.get_latest_job(
         db,
         student.id
@@ -101,13 +92,12 @@ def match_job(
             detail="No job description uploaded."
         )
 
-    # Use Gemini AI to compare the resume with the job description
+    # AI Matching
     result = match_resume_with_job(
         resume.resume_text,
         job.description
     )
 
-    # Return AI matching results
     return {
         "success": True,
         "message": "Resume matched successfully.",

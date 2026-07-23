@@ -8,6 +8,7 @@ from routers import students
 from routers import auth
 from routers import resume
 from routers import jobs
+from routers import interview
 
 # =====================================================
 # Create Database Tables
@@ -41,8 +42,8 @@ app.include_router(resume.router)
 # Job Description APIs
 app.include_router(jobs.router)
 
-# Future Router
-# app.include_router(interview.router)
+# Interview Schema APIs
+app.include_router(interview.router)
 
 
 # =====================================================

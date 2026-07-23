@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 
 import crud
 import schemas
-from security import create_access_token, verify_password
+from security import verify_password
+from jwt_handler import create_access_token
 from database import get_db
 
 router = APIRouter(

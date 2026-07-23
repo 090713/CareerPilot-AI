@@ -32,7 +32,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @router.post("/upload")
 async def upload_resume(
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -64,17 +64,8 @@ async def upload_resume(
     # Extract text from PDF
     extracted_text = extract_text_from_pdf(file_path)
 
-    # Get logged-in student
-    student = crud.get_student_by_email(
-        db,
-        current_user["sub"]
-    )
-
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Student not found."
-        )
+    # Logged-in student
+    student = current_user
 
     # Save as a new resume version
     new_resume = crud.create_resume(
@@ -101,24 +92,14 @@ async def upload_resume(
 # =====================================================
 @router.post("/analyze")
 def analyze_uploaded_resume(
-    current_user: dict = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Analyze the latest uploaded resume using Gemini AI.
     """
 
-    # Get logged-in student
-    student = crud.get_student_by_email(
-        db,
-        current_user["sub"]
-    )
-
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Student not found."
-        )
+    student = current_user
 
     # Get latest uploaded resume
     latest_resume = crud.get_latest_resume(
@@ -162,23 +143,14 @@ def analyze_uploaded_resume(
 # =====================================================
 @router.get("/history")
 def get_resume_history(
-    current_user: dict = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Return all uploaded resume versions.
     """
 
-    student = crud.get_student_by_email(
-        db,
-        current_user["sub"]
-    )
-
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Student not found."
-        )
+    student = current_user
 
     resumes = crud.get_resume_history(
         db,
@@ -206,23 +178,14 @@ def get_resume_history(
 @router.get("/version/{version}")
 def get_resume_version(
     version: int,
-    current_user: dict = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Fetch a specific resume version.
     """
 
-    student = crud.get_student_by_email(
-        db,
-        current_user["sub"]
-    )
-
-    if student is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Student not found."
-        )
+    student = current_user
 
     resume = crud.get_resume_by_version(
         db,

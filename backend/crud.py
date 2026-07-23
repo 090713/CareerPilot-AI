@@ -230,3 +230,44 @@ def get_latest_job(
         .order_by(models.Job.uploaded_at.desc())
         .first()
     )
+
+# =====================================================
+# Interview CRUD Operations
+# =====================================================
+
+def save_interview(
+    db,
+    student_id,
+    resume_id,
+    job_id,
+    questions
+):
+    """
+    Save an AI-generated interview session.
+    """
+
+    interview = models.Interview(
+        student_id=student_id,
+        resume_id=resume_id,
+        job_id=job_id,
+        questions=questions
+    )
+
+    db.add(interview)
+    db.commit()
+    db.refresh(interview)
+
+    return interview
+
+
+def get_interviews(db, student_id):
+    """
+    Retrieve all interview sessions for a student.
+    """
+
+    return (
+        db.query(models.Interview)
+        .filter(models.Interview.student_id == student_id)
+        .order_by(models.Interview.created_at.desc())
+        .all()
+    )
