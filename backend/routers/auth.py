@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 import crud
@@ -19,37 +18,33 @@ router = APIRouter(
     response_model=schemas.Token
 )
 def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    login_data: schemas.LoginRequest,
     db: Session = Depends(get_db)
 ):
     """
     Login using email and password.
     """
 
-    # Find student by email
     student = crud.get_student_by_email(
-    db,
-    form_data.username
-)
+        db,
+        login_data.email
+    )
 
-    # Email not found
     if student is None:
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password"
         )
 
-    # Wrong password
     if not verify_password(
-    form_data.password,
-    student.password
-):
+        login_data.password,
+        student.password
+    ):
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password"
         )
 
-    # Create JWT token
     access_token = create_access_token(
         data={
             "sub": student.email

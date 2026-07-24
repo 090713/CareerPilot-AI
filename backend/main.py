@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 
+# Middleware used to allow the React frontend
+# to communicate with the FastAPI backend.
+from fastapi.middleware.cors import CORSMiddleware
+
 from database import engine
 from models import Base
 
@@ -24,6 +28,34 @@ app = FastAPI(
     title="CareerPilot AI",
     description="AI-powered Career Guidance Platform using FastAPI, PostgreSQL and Gemini AI",
     version="2.0.0"
+)
+
+# =====================================================
+# CORS Configuration
+# =====================================================
+# CORS (Cross-Origin Resource Sharing) allows the React
+# frontend running on a different port to access this
+# FastAPI backend.
+
+origins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+
+    # Allow requests only from the frontend URLs above
+    allow_origins=origins,
+
+    # Allow cookies and authentication headers
+    allow_credentials=True,
+
+    # Allow all HTTP methods (GET, POST, PUT, DELETE...)
+    allow_methods=["*"],
+
+    # Allow all request headers
+    allow_headers=["*"],
 )
 
 # =====================================================
